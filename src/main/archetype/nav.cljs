@@ -4,14 +4,15 @@
             [secretary.core :as secretary]
             [goog.events :as gevents]
             [goog.history.EventType :as HistoryEventType]
-            [pushy.core :as pushy])
+            [pushy.core :as pushy]
+            [archetype.config :as config])
   (:import goog.History))
 
 (def ^:private pushy-supported? (pushy/supported?))
 
-(def ^:private pushy-prefix "/")
+(def ^:private pushy-prefix config/site-prefix)
 (def ^:private secretary-prefix (if pushy-supported?
-                                  (str pushy-prefix "/")
+                                  pushy-prefix
                                   "#"))
 
 (defn init! []
