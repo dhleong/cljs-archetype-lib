@@ -53,9 +53,10 @@
 (defn prefix
   "Prefix a link as necessary for :href-based navigation to work"
   [raw-link]
-  (if pushy-supported?
-    (str pushy-prefix raw-link)
-    (str "#" raw-link)))
+  (cond
+    (= "#" raw-link) raw-link
+    pushy-supported? (str pushy-prefix raw-link)
+    :else (str "#" raw-link)))
 
 (defn navigate! [& args]
   (dispatch (into [:navigate!] args)))
