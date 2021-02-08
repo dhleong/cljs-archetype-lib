@@ -15,21 +15,27 @@
                               ; clear
                               #{}))))
 
-(defn- error-view [err-atom info-atom error]
-  [:div.error-boundary
-   [:div.error-boundary-title "Oops! Something went wrong"]
-   [:div [:a {:href "#"
-              :on-click (fn-click
-                          (reset! info-atom nil)
-                          (reset! err-atom nil))}
-          "Try again"]]
+(defn- error-view [props err-atom info-atom error]
+  (let [{:keys [clean-error clean-component-stack]
+         :or {clean-component-stack identity}} props]
+    [:div.error-boundary
+     [:div.error-boundary-title "Oops! Something went wrong"]
+     [:div [:a {:href "#"
+                :on-click (fn-click
+                            (reset! info-atom nil)
+                            (reset! err-atom nil))}
+            "Try again"]]
 
-   (when-let [info @info-atom]
-     [:pre "Component Stack:\n" (.-componentStack info)])
+     (when-let [info @info-atom]
+       [:pre "Component Stack:\n"
+        (clean-component-stack
+          (.-componentStack info))])
 
-   [:pre (if (ex-message error)
-           (.-stack error)
-           (str error))]])
+     [:pre "Error:\n"
+      (cond
+        clean-error (clean-error error)
+        (ex-message error) (.-stack error)
+        :else (str error))]]))
 
 (defn error-boundary [& _]
   (r/with-let [err (r/atom nil)
@@ -51,8 +57,13 @@
                                         (reset! err error))}
 
        :reagent-render (fn [& children]
-                         (if-let [e @err]
-                           [error-view err info-atom e]
+                         (let [props (when (map? (first children))
+                                       (first children))
+                               children (if (map? (first children))
+                                          (rest children)
+                                          children)]
+                           (if-let [e @err]
+                             [error-view props err info-atom e]
 
-                           (into [:<>] children)))})))
+                             (into [:<>] children))))})))
 
